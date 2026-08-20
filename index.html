@@ -53,7 +53,7 @@
   .row:nth-child(5) .label { background: #ccff80; }
   .row:nth-child(6) .label { background: #80ff80; }
   .row:nth-child(7) .label { background: #80ffff; }
-
+ 
   #notrated {
     margin-top: 0;
     border: 1px solid #000;
@@ -71,7 +71,7 @@
     text-align: center;
     line-height: 1.3;
   }
-
+ 
   .item {
     width: 76px;
     height: 76px;
@@ -93,7 +93,7 @@
   }
   .item:active { cursor: grabbing; }
   .item.dragging { opacity: 0.4; }
-
+ 
   .item[data-name]::after {
     content: attr(data-name);
     position: absolute;
@@ -134,7 +134,7 @@
   .item[data-name]:hover::after {
     transform: translateX(-50%) translateY(2px);
   }
-
+ 
   #addbar {
     display: flex;
     gap: 8px;
@@ -170,20 +170,29 @@
     color: #e57373;
     font-size: 12px;
   }
-
-  #trash {
+ 
+  #iconActions {
     margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .iconbtn {
     width: 38px;
     height: 38px;
     border-radius: 4px;
     background: transparent;
     border: none;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     transition: background 0.15s;
   }
-  #trash svg {
+  .iconbtn:hover {
+    background: #2a2a2a;
+  }
+  .iconbtn svg {
     width: 20px;
     height: 20px;
     stroke: #999;
@@ -193,6 +202,7 @@
     stroke-linejoin: round;
     transition: stroke 0.15s;
   }
+  .iconbtn:hover svg { stroke: #eee; }
   #trash.dragover {
     background: #e03e3e;
   }
@@ -200,46 +210,63 @@
 </style>
 </head>
 <body>
-
+ 
 <div id="tierlist"></div>
 <div id="gapfill"></div>
-
+ 
 <div id="addbar">
   <input type="text" id="mcUsername" placeholder="Minecraft username">
   <button id="addBtn" onclick="addMinecraftFace()">Add Player</button>
   <span class="msg" id="addMsg"></span>
-  <div id="trash">
-    <svg viewBox="0 0 24 24">
-      <path d="M3 6h18"/>
-      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6"/>
-      <path d="M14 11v6"/>
-    </svg>
+  <div id="iconActions">
+    <button id="saveBtn" class="iconbtn" title="Save tier list">
+      <svg viewBox="0 0 24 24">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+        <path d="M17 21v-8H7v8"/>
+        <path d="M7 3v5h8"/>
+      </svg>
+    </button>
+    <button id="loadBtn" class="iconbtn" title="Load tier list">
+      <svg viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <path d="M7 10l5-5 5 5"/>
+        <path d="M12 5v12"/>
+      </svg>
+    </button>
+    <input type="file" id="loadInput" accept="application/json" style="display:none">
+    <div id="trash" class="iconbtn" title="Drag here to delete">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 6h18"/>
+        <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        <path d="M10 11v6"/>
+        <path d="M14 11v6"/>
+      </svg>
+    </div>
   </div>
 </div>
-
+ 
 <script>
 const defaultTiers = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
 const tierlistEl = document.getElementById('tierlist');
-
+ 
 function makeRow(labelText) {
   const row = document.createElement('div');
   row.className = 'row';
-
+ 
   const label = document.createElement('div');
   label.className = 'label';
   label.textContent = labelText;
-
+ 
   const itemsDiv = document.createElement('div');
   itemsDiv.className = 'row-items';
   addDropZone(itemsDiv);
-
+ 
   row.appendChild(label);
   row.appendChild(itemsDiv);
   return row;
 }
-
+ 
 function addDropZone(container) {
   container.addEventListener('dragover', e => {
     e.preventDefault();
@@ -250,7 +277,7 @@ function addDropZone(container) {
     else container.insertBefore(dragging, after);
   });
 }
-
+ 
 function getDragAfterElement(container, x, y) {
   const items = [...container.querySelectorAll('.item:not(.dragging)')];
   let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
@@ -266,7 +293,7 @@ function getDragAfterElement(container, x, y) {
   });
   return closest.element;
 }
-
+ 
 function makeItem(text, imgSrc) {
   const div = document.createElement('div');
   div.className = 'item';
@@ -281,38 +308,38 @@ function makeItem(text, imgSrc) {
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
   return div;
 }
-
+ 
 function addMinecraftFace() {
   const input = document.getElementById('mcUsername');
   const msg = document.getElementById('addMsg');
   const btn = document.getElementById('addBtn');
   const username = input.value.trim();
   msg.textContent = '';
-
+ 
   if (!username) {
     msg.textContent = 'Enter a username first.';
     return;
   }
-
+ 
   btn.disabled = true;
   btn.textContent = 'Adding...';
-
+ 
   const img = new Image();
   const faceUrl = `https://api.mcheads.org/head/${encodeURIComponent(username)}/256/hat`;
   let settled = false;
-
+ 
   const reset = () => {
     btn.disabled = false;
     btn.textContent = 'Add Player';
   };
-
+ 
   const timeout = setTimeout(() => {
     if (settled) return;
     settled = true;
     msg.textContent = 'Request timed out — check your connection and try again.';
     reset();
   }, 6000);
-
+ 
   img.onload = () => {
     if (settled) return;
     settled = true;
@@ -331,20 +358,125 @@ function addMinecraftFace() {
   };
   img.src = faceUrl;
 }
-
+ 
 defaultTiers.forEach(t => tierlistEl.appendChild(makeRow(t)));
-
+ 
 const notRatedRow = makeRow('Not Rated');
 const notRatedLabel = notRatedRow.querySelector('.label');
 notRatedLabel.innerHTML = 'Not Rated<br>No Opinion';
 notRatedRow.id = 'notrated';
 const gapfillEl = document.getElementById('gapfill');
 gapfillEl.parentNode.insertBefore(notRatedRow, gapfillEl.nextSibling);
-
+ 
 document.getElementById('mcUsername').addEventListener('keydown', e => {
   if (e.key === 'Enter') addMinecraftFace();
 });
-
+ 
+let secretBuffer = '';
+let lonerRow = null;
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key.length !== 1) return;
+  secretBuffer = (secretBuffer + e.key.toLowerCase()).slice(-4);
+  if (secretBuffer === 'shit') {
+    if (lonerRow) {
+      lonerRow.remove();
+      lonerRow = null;
+    } else {
+      lonerRow = makeRow('The Loner Tier');
+      lonerRow.querySelector('.label').style.background = '#4a1414';
+      lonerRow.querySelector('.label').style.color = '#eee';
+      const rows = tierlistEl.querySelectorAll('.row');
+      const fRow = rows[rows.length - 1];
+      fRow.insertAdjacentElement('afterend', lonerRow);
+    }
+  }
+});
+ 
+function rowKey(row) {
+  return row.id === 'notrated' ? 'notrated' : row.querySelector('.label').textContent.trim();
+}
+ 
+function getItemData(item) {
+  const bg = item.style.backgroundImage;
+  let img = null;
+  if (bg) {
+    const m = bg.match(/url\(["']?(.*?)["']?\)/);
+    if (m) img = m[1];
+  }
+  return { text: item.textContent || null, name: item.dataset.name || null, img };
+}
+ 
+function serializeState() {
+  const rows = document.querySelectorAll('.row');
+  const tiers = [];
+  rows.forEach(row => {
+    const items = [...row.querySelectorAll('.item')].map(getItemData);
+    tiers.push({ key: rowKey(row), items });
+  });
+  return { tiers };
+}
+ 
+function downloadState() {
+  const data = serializeState();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tierlist.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+ 
+function restoreState(data) {
+  if (!data || !Array.isArray(data.tiers)) return;
+ 
+  const hasLonerInData = data.tiers.some(t => t.key === 'The Loner Tier');
+  if (hasLonerInData && !lonerRow) {
+    lonerRow = makeRow('The Loner Tier');
+    lonerRow.querySelector('.label').style.background = '#4a1414';
+    lonerRow.querySelector('.label').style.color = '#eee';
+    const rows = tierlistEl.querySelectorAll('.row');
+    rows[rows.length - 1].insertAdjacentElement('afterend', lonerRow);
+  } else if (!hasLonerInData && lonerRow) {
+    lonerRow.remove();
+    lonerRow = null;
+  }
+ 
+  document.querySelectorAll('.row').forEach(row => {
+    const key = rowKey(row);
+    const match = data.tiers.find(t => t.key === key);
+    const itemsDiv = row.querySelector('.row-items');
+    itemsDiv.innerHTML = '';
+    if (!match) return;
+    match.items.forEach(it => {
+      itemsDiv.appendChild(makeItem(it.img ? it.name : it.text, it.img));
+    });
+  });
+}
+ 
+document.getElementById('saveBtn').addEventListener('click', downloadState);
+ 
+const loadInput = document.getElementById('loadInput');
+document.getElementById('loadBtn').addEventListener('click', () => loadInput.click());
+loadInput.addEventListener('change', () => {
+  const file = loadInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      restoreState(data);
+    } catch (err) {
+      alert('Could not load that file — it may not be a valid tier list export.');
+    }
+    loadInput.value = '';
+  };
+  reader.readAsText(file);
+});
+ 
 const trashEl = document.getElementById('trash');
 trashEl.addEventListener('dragover', e => {
   e.preventDefault();
@@ -360,6 +492,7 @@ trashEl.addEventListener('drop', e => {
   if (dragging) dragging.remove();
 });
 </script>
-
+ 
 </body>
 </html>
+ 
