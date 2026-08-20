@@ -219,6 +219,17 @@
     background: #e03e3e;
   }
   #trash.dragover svg { stroke: #fff; }
+
+  #watermark {
+    position: fixed;
+    bottom: 6px;
+    right: 10px;
+    font-size: 11px;
+    color: #555;
+    pointer-events: none;
+    z-index: 50;
+    user-select: none;
+  }
 </style>
 </head>
 <body>
@@ -504,6 +515,8 @@ trashEl.addEventListener('drop', e => {
   if (dragging) dragging.remove();
 });
 </script>
+
+<div id="watermark">vibecoded by jeppe_e</div>
 
 </body>
 </html>
