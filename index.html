@@ -53,7 +53,7 @@
   .row:nth-child(5) .label { background: #ccff80; }
   .row:nth-child(6) .label { background: #80ff80; }
   .row:nth-child(7) .label { background: #80ffff; }
- 
+
   #notrated {
     margin-top: 0;
     border: 1px solid #000;
@@ -71,7 +71,7 @@
     text-align: center;
     line-height: 1.3;
   }
- 
+
   .item {
     width: 76px;
     height: 76px;
@@ -93,7 +93,7 @@
   }
   .item:active { cursor: grabbing; }
   .item.dragging { opacity: 0.4; }
- 
+
   .item[data-name]::after {
     content: attr(data-name);
     position: absolute;
@@ -134,7 +134,7 @@
   .item[data-name]:hover::after {
     transform: translateX(-50%) translateY(2px);
   }
- 
+
   #addbar {
     display: flex;
     gap: 8px;
@@ -166,11 +166,18 @@
   }
   #addbar button:hover { background: #5cc061; }
   #addbar button:disabled { background: #555; cursor: default; }
+  #addbar button.iconbtn,
+  #addbar button.iconbtn:hover,
+  #addbar button.iconbtn:disabled {
+    background: transparent;
+    padding: 0;
+  }
+  #addbar button.iconbtn:hover { background: #2a2a2a; }
   #addbar .msg {
     color: #e57373;
     font-size: 12px;
   }
- 
+
   #iconActions {
     margin-left: auto;
     display: flex;
@@ -183,6 +190,11 @@
     background: transparent;
     border: none;
     padding: 0;
+    margin: 0;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    font: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -210,10 +222,10 @@
 </style>
 </head>
 <body>
- 
+
 <div id="tierlist"></div>
 <div id="gapfill"></div>
- 
+
 <div id="addbar">
   <input type="text" id="mcUsername" placeholder="Minecraft username">
   <button id="addBtn" onclick="addMinecraftFace()">Add Player</button>
@@ -245,28 +257,28 @@
     </div>
   </div>
 </div>
- 
+
 <script>
 const defaultTiers = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
 const tierlistEl = document.getElementById('tierlist');
- 
+
 function makeRow(labelText) {
   const row = document.createElement('div');
   row.className = 'row';
- 
+
   const label = document.createElement('div');
   label.className = 'label';
   label.textContent = labelText;
- 
+
   const itemsDiv = document.createElement('div');
   itemsDiv.className = 'row-items';
   addDropZone(itemsDiv);
- 
+
   row.appendChild(label);
   row.appendChild(itemsDiv);
   return row;
 }
- 
+
 function addDropZone(container) {
   container.addEventListener('dragover', e => {
     e.preventDefault();
@@ -277,7 +289,7 @@ function addDropZone(container) {
     else container.insertBefore(dragging, after);
   });
 }
- 
+
 function getDragAfterElement(container, x, y) {
   const items = [...container.querySelectorAll('.item:not(.dragging)')];
   let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
@@ -293,7 +305,7 @@ function getDragAfterElement(container, x, y) {
   });
   return closest.element;
 }
- 
+
 function makeItem(text, imgSrc) {
   const div = document.createElement('div');
   div.className = 'item';
@@ -308,38 +320,38 @@ function makeItem(text, imgSrc) {
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
   return div;
 }
- 
+
 function addMinecraftFace() {
   const input = document.getElementById('mcUsername');
   const msg = document.getElementById('addMsg');
   const btn = document.getElementById('addBtn');
   const username = input.value.trim();
   msg.textContent = '';
- 
+
   if (!username) {
     msg.textContent = 'Enter a username first.';
     return;
   }
- 
+
   btn.disabled = true;
   btn.textContent = 'Adding...';
- 
+
   const img = new Image();
   const faceUrl = `https://api.mcheads.org/head/${encodeURIComponent(username)}/256/hat`;
   let settled = false;
- 
+
   const reset = () => {
     btn.disabled = false;
     btn.textContent = 'Add Player';
   };
- 
+
   const timeout = setTimeout(() => {
     if (settled) return;
     settled = true;
     msg.textContent = 'Request timed out — check your connection and try again.';
     reset();
   }, 6000);
- 
+
   img.onload = () => {
     if (settled) return;
     settled = true;
@@ -358,20 +370,20 @@ function addMinecraftFace() {
   };
   img.src = faceUrl;
 }
- 
+
 defaultTiers.forEach(t => tierlistEl.appendChild(makeRow(t)));
- 
+
 const notRatedRow = makeRow('Not Rated');
 const notRatedLabel = notRatedRow.querySelector('.label');
 notRatedLabel.innerHTML = 'Not Rated<br>No Opinion';
 notRatedRow.id = 'notrated';
 const gapfillEl = document.getElementById('gapfill');
 gapfillEl.parentNode.insertBefore(notRatedRow, gapfillEl.nextSibling);
- 
+
 document.getElementById('mcUsername').addEventListener('keydown', e => {
   if (e.key === 'Enter') addMinecraftFace();
 });
- 
+
 let secretBuffer = '';
 let lonerRow = null;
 document.addEventListener('keydown', e => {
@@ -392,11 +404,11 @@ document.addEventListener('keydown', e => {
     }
   }
 });
- 
+
 function rowKey(row) {
   return row.id === 'notrated' ? 'notrated' : row.querySelector('.label').textContent.trim();
 }
- 
+
 function getItemData(item) {
   const bg = item.style.backgroundImage;
   let img = null;
@@ -406,7 +418,7 @@ function getItemData(item) {
   }
   return { text: item.textContent || null, name: item.dataset.name || null, img };
 }
- 
+
 function serializeState() {
   const rows = document.querySelectorAll('.row');
   const tiers = [];
@@ -416,7 +428,7 @@ function serializeState() {
   });
   return { tiers };
 }
- 
+
 function downloadState() {
   const data = serializeState();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -429,10 +441,10 @@ function downloadState() {
   a.remove();
   URL.revokeObjectURL(url);
 }
- 
+
 function restoreState(data) {
   if (!data || !Array.isArray(data.tiers)) return;
- 
+
   const hasLonerInData = data.tiers.some(t => t.key === 'The Loner Tier');
   if (hasLonerInData && !lonerRow) {
     lonerRow = makeRow('The Loner Tier');
@@ -444,7 +456,7 @@ function restoreState(data) {
     lonerRow.remove();
     lonerRow = null;
   }
- 
+
   document.querySelectorAll('.row').forEach(row => {
     const key = rowKey(row);
     const match = data.tiers.find(t => t.key === key);
@@ -456,9 +468,9 @@ function restoreState(data) {
     });
   });
 }
- 
+
 document.getElementById('saveBtn').addEventListener('click', downloadState);
- 
+
 const loadInput = document.getElementById('loadInput');
 document.getElementById('loadBtn').addEventListener('click', () => loadInput.click());
 loadInput.addEventListener('change', () => {
@@ -476,7 +488,7 @@ loadInput.addEventListener('change', () => {
   };
   reader.readAsText(file);
 });
- 
+
 const trashEl = document.getElementById('trash');
 trashEl.addEventListener('dragover', e => {
   e.preventDefault();
@@ -492,7 +504,6 @@ trashEl.addEventListener('drop', e => {
   if (dragging) dragging.remove();
 });
 </script>
- 
+
 </body>
 </html>
- 
