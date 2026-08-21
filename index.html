@@ -317,13 +317,78 @@ function getDragAfterElement(container, x, y) {
   return closest.element;
 }
 
+// Loads face images one at a time (with a small gap between each) instead of
+// firing them all at once. Restoring a saved list with many players used to
+// blast the mcheads API with a burst of simultaneous requests, which is what
+// was causing timeouts/failures — this smooths that out.
+const imageLoadQueue = [];
+let imageLoadBusy = false;
+const IMAGE_LOAD_STAGGER_MS = 150;
+const IMAGE_LOAD_TIMEOUT_MS = 10000;
+
+function queueImageLoad(src, onSuccess, onError) {
+  imageLoadQueue.push({ src, onSuccess, onError });
+  processImageQueue();
+}
+
+function processImageQueue() {
+  if (imageLoadBusy) return;
+  const next = imageLoadQueue.shift();
+  if (!next) return;
+  imageLoadBusy = true;
+
+  const advance = () => {
+    imageLoadBusy = false;
+    setTimeout(processImageQueue, IMAGE_LOAD_STAGGER_MS);
+  };
+
+  const img = new Image();
+  let settled = false;
+
+  const timeout = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    if (next.onError) next.onError();
+    advance();
+  }, IMAGE_LOAD_TIMEOUT_MS);
+
+  img.onload = () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timeout);
+    next.onSuccess(next.src);
+    advance();
+  };
+  img.onerror = () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timeout);
+    if (next.onError) next.onError();
+    advance();
+  };
+  img.src = next.src;
+}
+
 function makeItem(text, imgSrc) {
   const div = document.createElement('div');
   div.className = 'item';
   div.draggable = true;
   if (imgSrc) {
-    div.style.backgroundImage = `url(${imgSrc})`;
     if (text) div.dataset.name = text;
+    div.classList.add('img-pending');
+    queueImageLoad(
+      imgSrc,
+      (src) => {
+        div.style.backgroundImage = `url(${src})`;
+        div.classList.remove('img-pending');
+      },
+      () => {
+        // Couldn't load the face this time — keep the name visible as a fallback
+        // instead of leaving a blank tile.
+        div.textContent = text || '';
+        div.classList.remove('img-pending');
+      }
+    );
   } else {
     div.textContent = text || '';
   }
