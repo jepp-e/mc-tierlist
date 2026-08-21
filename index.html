@@ -409,6 +409,16 @@ function addMinecraftFace() {
     return;
   }
 
+  // Bedrock players show up with a leading dot (e.g. ".Steve123") since
+  // there's no Java skin/head to fetch for them via mcheads — just drop
+  // them in as a plain text tile instead of hitting the API.
+  if (username.startsWith('.')) {
+    const notratedItems = document.querySelector('#notrated .row-items');
+    notratedItems.appendChild(makeItem(username, null));
+    input.value = '';
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Adding...';
 
